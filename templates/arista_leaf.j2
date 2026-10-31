@@ -1,0 +1,83 @@
+! Arista vEOS Leaf Switch Configuration - {{ hostname }}
+! ASN: {{ asn }} | Site-ID: {{ site_id }}
+!
+hostname {{ hostname }}
+!
+spanning-tree mode mstp
+no spanning-tree vlan-id 4094
+!
+no aaa root
+!
+vlan {{ mlag_vlan }}
+   name MLAG_PEER_VLAN
+   trunk group mlag-peer-group
+!
+vlan {{ controller_vlan }}
+   name SDWAN_CONTROLLER_VLAN
+!
+interface Port-Channel10
+   description MLAG Peer-Link Trunk
+   switchport mode trunk
+   switchport trunk group mlag-peer-group
+!
+interface Ethernet10
+   description MLAG Peer Link Member 1
+   channel-group 10 mode active
+   mtu 1500
+!
+interface Ethernet11
+   description MLAG Peer Link Member 2
+   channel-group 10 mode active
+   mtu 1500
+!
+interface VLAN{{ mlag_vlan }}
+   description MLAG Peer SVI
+   ip address {{ mlag_ip }}/30
+   mtu 1500
+!
+mlag configuration
+   domain-id LEAF_PAIR_1
+   local-interface Vlan{{ mlag_vlan }}
+   peer-address {{ mlag_peer_ip }}
+   peer-link Port-Channel10
+!
+interface Loopback0
+   description Router-ID / EVPN VTEP Loopback
+   ip address {{ loopback_ip }}/32
+!
+interface Ethernet1
+   description Controller Connection (vManage / vBond)
+   switchport access vlan {{ controller_vlan }}
+   spanning-tree portfast
+!
+interface Ethernet2
+   description Controller Connection (vSmart / TestServer)
+   switchport access vlan {{ controller_vlan }}
+   spanning-tree portfast
+!
+interface Ethernet3
+   description Uplink to vEOS-Spine-01
+   no switchport
+   ip address {{ spine1_link_ip }}/30
+   mtu 1500
+!
+interface Ethernet4
+   description Uplink to vEOS-Spine-02
+   no switchport
+   ip address {{ spine2_link_ip }}/30
+   mtu 1500
+!
+router bgp {{ asn }}
+   router-id {{ loopback_ip }}
+   neighbor SPINES peer group
+   neighbor SPINES remote-as {{ asn }}
+   neighbor SPINES update-source Loopback0
+   neighbor {{ spine1_ip }} peer group SPINES
+   neighbor {{ spine2_ip }} peer group SPINES
+   !
+   address-family evpn
+      neighbor SPINES activate
+   !
+   address-family ipv4
+      neighbor SPINES activate
+!
