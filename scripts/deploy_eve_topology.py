@@ -191,7 +191,7 @@ def main():
     #    vSmart : eth0 = Leaf-01, eth1 = MGMT
     #    vBond  : index 0 = eth0 (MGMT), index 1 = ge0/0 (VPN 0 underlay -> Leaf-02)
     print("\n--- Deploying SD-WAN Controllers & Compute Services ---")
-    nodes["vManage"]    = add_node("vManage-01", "qemu", "vtmgmt",  "vtmgmt-20.18.5",  4, 16384, 3, 100, 50)
+    nodes["vManage"]    = add_node("vManage-01", "qemu", "vtmgmt",  "vtmgmt-20.18.5",  4, 32768, 3, 100, 50)
     nodes["vSmart"]     = add_node("vSmart-01",  "qemu", "vtsmart", "vtsmart-20.18.5", 2, 4096,  2, 300, 50)
     nodes["vBond"]      = add_node("vBond-01",   "qemu", "vtbond",  "vtbond-20.18.5",  2, 4096,  2, 500, 50)
     nodes["TestServer"] = add_node("Host-TestServer", "qemu", "linux", "ubuntu-22.04", 1, 2048, 2, 700, 50)
